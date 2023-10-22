@@ -161,6 +161,10 @@ def write_mapping_data(conn, mapping_data):
 
 def populate_table_leagues(conn, non_processed):
     f = None
+    if non_processed is None:
+        print("No leagues to process")
+        return 'leagues', None
+    new_non_processed = []
     if not non_processed:
         f = open('esports-data/leagues.json', 'rb')
         leagues = orjson.loads(f.read())
@@ -182,15 +186,20 @@ def populate_table_leagues(conn, non_processed):
             non_processed.append(league)
     if f:
         f.close()
-    print(f"Done populating leagues, total leagues: {len(leagues)}, non_processed: {len(non_processed)}")
-    return 'leagues', non_processed
+    print(f"Done populating leagues, total leagues: {len(leagues)}, non_processed: {len(new_non_processed)}")
+    return 'leagues', new_non_processed
 
 
 def populate_table_tournaments(conn, non_processed):
     f = None
+    if non_processed is None:
+        print("No tournaments to process")
+        return 'tournaments', None
     if not non_processed:
         f = open('esports-data/tournaments.json', 'rb')
+    new_non_processed = []
     tournaments = orjson.loads(f.read()) if not non_processed else non_processed
+    print("Total tournaments: {}".format(len(tournaments)))
     for tournament in tournaments:
         try:
             tournament_data = {
@@ -219,7 +228,9 @@ def populate_table_tournaments(conn, non_processed):
                                 if team['result']['outcome'].lower() == 'win':
                                     match_data['match_winner'] = team['id']
                             except Exception:
-                                match_data['match_winner'] = None
+                                pass
+                        if not match_data.get('match_winner'):
+                            match_data['match_winner'] = None
                         for game in match['games']:
                             if game['state'] == 'unneeded':
                                 continue
@@ -246,15 +257,19 @@ def populate_table_tournaments(conn, non_processed):
                             write_tournament_data(conn, tournament_data)
         except Exception:
             print(traceback.format_exc())
-            non_processed.append(tournament)
+            new_non_processed.append(tournament)
     if f:
         f.close()
-    print("Done populating tournaments, total tournaments: {}, non_processed: {}".format(len(tournaments), len(non_processed)))
-    return 'tournaments', non_processed
+    print("Done populating tournaments, total tournaments: {}, non_processed: {}".format(len(tournaments), len(new_non_processed)))
+    return 'tournaments', new_non_processed
 
 
 def populate_table_players(conn, non_processed):
     f = None
+    if non_processed is None:
+        print("No players to process")
+        return 'players', None
+    new_non_processed = []
     if not non_processed:
         f = open('esports-data/players.json', 'rb')
     players = orjson.loads(f.read()) if not non_processed else non_processed
@@ -268,18 +283,22 @@ def populate_table_players(conn, non_processed):
             write_player_data(conn, player_data)
         except Exception:
             print(traceback.format_exc())
-            non_processed.append(player)
+            new_non_processed.append(player)
     if f:
         f.close()
-    print("Done populating players, total players: {}, non_processed: {}".format(len(players), len(non_processed)))
-    return 'players', non_processed
+    print("Done populating players, total players: {}, non_processed: {}".format(len(players), len(new_non_processed)))
+    return 'players', new_non_processed
 
 
 def populate_table_teams(conn, non_processed):
     f = None
+    if non_processed is None:
+        print("No teams to process")
+        return 'teams', None
     if not non_processed:
         f = open('esports-data/teams.json', 'rb')
     teams = orjson.loads(f.read()) if not non_processed else non_processed
+    print("Total teams: {}".format(len(teams)))
     for team in teams:
         try:
             team_data = {
@@ -300,35 +319,44 @@ def populate_table_teams(conn, non_processed):
 
 def populate_table_mapping_data(conn, non_processed):
     f = None
+    if non_processed is None:
+        print("No mapping data to process")
+        return 'mapping_data', None
+    new_non_processed = []
     if not non_processed:
         f = open('esports-data/mapping_data.json', 'rb')
     mapping_data = orjson.loads(f.read()) if not non_processed else non_processed
+    print("Total mapping data: {}".format(len(mapping_data)))
     for mapping in mapping_data:
         try:
-            mapping_data = {
+            mapping_inner_data = {
                 'game_id': mapping['esportsGameId'],
                 'platform_game_id': mapping['platformGameId'],
-                "blue_team_id": mapping['teamMapping']['100'],
-                "red_team_id": mapping['teamMapping']['200'],
+                "blue_team_id": mapping['teamMapping'].get('100'),
+                "red_team_id": mapping['teamMapping'].get('200'),
             }
             for participant in mapping['participantMapping']:
-                mapping_data['participant_id'] = participant
-                mapping_data['participant_player_id'] = mapping['participantMapping'][participant]
-                write_mapping_data(conn, mapping_data)
+                mapping_inner_data['participant_id'] = participant
+                mapping_inner_data['participant_player_id'] = mapping['participantMapping'][participant]
+                write_mapping_data(conn, mapping_inner_data)
         except Exception:
-            non_processed.append(mapping)
+            new_non_processed.append(mapping)
             print(traceback.format_exc())
     if f:
         f.close()
-    print("Done populating mapping data, total mapping data: {}, non_processed: {}".format(len(mapping_data), len(non_processed)))
-    return 'mapping_data', non_processed
+    print("Done populating mapping data, total mapping data: {}, non_processed: {}".format(len(mapping_data), len(new_non_processed)))
+    return 'mapping_data', new_non_processed
 
 
 def populate_tables():
     non_processed_data = {}
     with open('non_processed.json', 'r') as f:
         non_processed_data = orjson.loads(f.read())
+    for key in non_processed_data:
+        if non_processed_data[key]:
+            print(key, len(non_processed_data[key]))
     db_conn_mapping = {}
+    non_processed_data_to_write = {}
     try:
         import concurrent.futures
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
@@ -348,12 +376,15 @@ def populate_tables():
             for future in concurrent.futures.as_completed(futures):
                 try:
                     table, non_processed = future.result()
-                    non_processed_data[table] = non_processed
+                    if not non_processed:
+                        non_processed_data_to_write[table] = None
+                    else:
+                        non_processed_data_to_write[table] = non_processed
                     db_conn_mapping[table].commit()
                 except Exception:
                     print(traceback.format_exc())
         with open('non_processed.json', 'w') as f:
-            f.write(orjson.dumps(non_processed_data).decode('utf-8'))
+            f.write(orjson.dumps(non_processed_data_to_write).decode('utf-8'))
     except Exception:
         print(traceback.format_exc())
     finally:
