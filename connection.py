@@ -119,13 +119,15 @@ def create_table_tournaments(conn):
         red_team_id VARCHAR(255) DEFAULT NULL,
         game_winner VARCHAR(255) DEFAULT NULL,
         match_winner VARCHAR(255) DEFAULT NULL,
+        game_state VARCHAR(255) DEFAULT NULL,
         INDEX (tournament_id),
         INDEX (league_id ASC),
         INDEX (game_id ASC),
         INDEX (blue_team_id ASC),
         INDEX (red_team_id ASC),
         INDEX (game_winner ASC),
-        INDEX (match_winner ASC)
+        INDEX (match_winner ASC),
+        INDEX (game_id, game_state ASC)
     );
     """
     return execute_write(conn, sql, {})

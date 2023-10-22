@@ -1,6 +1,7 @@
 import orjson
 import traceback
 from connection import execute_write, MySQLDatabase
+import time
 
 
 def write_league_data(conn, league_data):
@@ -46,7 +47,8 @@ def write_tournament_data(conn, tournament_data):
         blue_team_id,
         red_team_id,
         game_winner,
-        match_winner
+        match_winner,
+        game_state
     )
     VALUES (
         %(tournament_id)s,
@@ -62,7 +64,8 @@ def write_tournament_data(conn, tournament_data):
         %(blue_team_id)s,
         %(red_team_id)s,
         %(game_winner)s,
-        %(match_winner)s
+        %(match_winner)s,
+        %(game_state)s
     )
     """
     params = {
@@ -76,6 +79,7 @@ def write_tournament_data(conn, tournament_data):
         'stage_name': tournament_data['stage_name'],
         'stage_slug': tournament_data['stage_slug'],
         'game_id': tournament_data['game_id'],
+        'game_state': tournament_data['game_state'],
         'blue_team_id': tournament_data['blue_team_id'],
         'red_team_id': tournament_data['red_team_id'],
         'game_winner': tournament_data['game_winner'],
@@ -160,6 +164,7 @@ def write_mapping_data(conn, mapping_data):
 
 
 def populate_table_leagues(conn, non_processed):
+    start_time = time.time()
     f = None
     if non_processed is None:
         print("No leagues to process")
@@ -186,11 +191,12 @@ def populate_table_leagues(conn, non_processed):
             non_processed.append(league)
     if f:
         f.close()
-    print(f"Done populating leagues, total leagues: {len(leagues)}, non_processed: {len(new_non_processed)}")
+    print(f"Done populating leagues, total leagues: {len(leagues)}, non_processed: {len(new_non_processed)}, time taken: {time.time() - start_time} seconds")
     return 'leagues', new_non_processed
 
 
 def populate_table_tournaments(conn, non_processed):
+    start = time.time()
     f = None
     if non_processed is None:
         print("No tournaments to process")
@@ -236,6 +242,7 @@ def populate_table_tournaments(conn, non_processed):
                                 continue
                             game_data = {
                                 'game_id': game['id'],
+                                'game_state': game['state'],
                             }
                             for team in game['teams']:
                                 try:
@@ -260,11 +267,12 @@ def populate_table_tournaments(conn, non_processed):
             new_non_processed.append(tournament)
     if f:
         f.close()
-    print("Done populating tournaments, total tournaments: {}, non_processed: {}".format(len(tournaments), len(new_non_processed)))
+    print("Done populating tournaments, total tournaments: {}, non_processed: {}, time taken {} seconds".format(len(tournaments), len(new_non_processed), time.time() - start))
     return 'tournaments', new_non_processed
 
 
 def populate_table_players(conn, non_processed):
+    start = time.time()
     f = None
     if non_processed is None:
         print("No players to process")
@@ -286,11 +294,12 @@ def populate_table_players(conn, non_processed):
             new_non_processed.append(player)
     if f:
         f.close()
-    print("Done populating players, total players: {}, non_processed: {}".format(len(players), len(new_non_processed)))
+    print("Done populating players, total players: {}, non_processed: {}, time taken {} seconds".format(len(players), len(new_non_processed), time.time() - start))
     return 'players', new_non_processed
 
 
 def populate_table_teams(conn, non_processed):
+    start = time.time()
     f = None
     if non_processed is None:
         print("No teams to process")
@@ -313,11 +322,12 @@ def populate_table_teams(conn, non_processed):
             print(traceback.format_exc())
     if f:
         f.close()
-    print("Done populating teams, total teams: {}, non_processed: {}".format(len(teams), len(non_processed)))
+    print("Done populating teams, total teams: {}, non_processed: {}, time taken {} seconds".format(len(teams), len(non_processed), time.time() - start))
     return 'teams', non_processed
 
 
 def populate_table_mapping_data(conn, non_processed):
+    start = time.time()
     f = None
     if non_processed is None:
         print("No mapping data to process")
@@ -344,11 +354,12 @@ def populate_table_mapping_data(conn, non_processed):
             print(traceback.format_exc())
     if f:
         f.close()
-    print("Done populating mapping data, total mapping data: {}, non_processed: {}".format(len(mapping_data), len(new_non_processed)))
+    print("Done populating mapping data, total mapping data: {}, non_processed: {}, time taken {} seconds".format(len(mapping_data), len(new_non_processed), time.time() - start))
     return 'mapping_data', new_non_processed
 
 
 def populate_tables():
+    start = time.time()
     non_processed_data = {}
     with open('non_processed.json', 'r') as f:
         non_processed_data = orjson.loads(f.read())
@@ -391,6 +402,8 @@ def populate_tables():
         for key in db_conn_mapping:
             if db_conn_mapping[key]:
                 db_conn_mapping[key].close()
+
+    print("Done populating tables, time taken {} seconds".format(time.time() - start))
 
 
 if __name__ == '__main__':

@@ -1,1 +1,7 @@
-{"players":null,"leagues":null,"teams":null,"mapping_data":null,"tournaments":null}
+{
+    "leagues": [],
+    "tournaments": [],
+    "teams": [],
+    "mapping_data": [],
+    "players": []
+}
