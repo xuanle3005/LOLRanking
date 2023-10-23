@@ -6,15 +6,14 @@ import time
 import os
 from io import BytesIO
 
-
 S3_BUCKET_URL = "https://power-rankings-dataset-gprhack.s3.us-west-2.amazonaws.com"
 
 
 def download_gzip_and_write_to_json(file_name):
     local_file_name = file_name.replace(":", "_")
-    # If file already exists locally do not re-download game
-    if os.path.isfile(f"{local_file_name}.json"):
-        return
+    # # If file already exists locally do not re-download game
+    # if os.path.isfile(f"{local_file_name}.json"):
+    #     return
 
     response = requests.get(f"{S3_BUCKET_URL}/{file_name}.json.gz")
     if response.status_code == 200:
@@ -40,4 +39,7 @@ def download_esports_files():
         download_gzip_and_write_to_json(f"{directory}/{file_name}")
 
 
-download_esports_files()
+# download_esports_files()
+
+if __name__ == '__main__':
+    download_gzip_and_write_to_json("games/ESPORTSTMNT01:1110148")

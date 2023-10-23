@@ -2,6 +2,8 @@ import orjson
 import traceback
 from connection import execute_write, MySQLDatabase
 import time
+import concurrent.futures
+import json
 
 
 def write_league_data(conn, league_data):
@@ -326,6 +328,12 @@ def populate_table_teams(conn, non_processed):
     return 'teams', non_processed
 
 
+def _write_to_file(file_name, data):
+    with open(file_name, 'a+') as f:
+        f.write(orjson.dumps(data).decode('utf-8'))
+        f.write('\n')
+
+
 def populate_table_mapping_data(conn, non_processed):
     start = time.time()
     f = None
@@ -337,25 +345,70 @@ def populate_table_mapping_data(conn, non_processed):
         f = open('esports-data/mapping_data.json', 'rb')
     mapping_data = orjson.loads(f.read()) if not non_processed else non_processed
     print("Total mapping data: {}".format(len(mapping_data)))
-    for mapping in mapping_data:
-        try:
-            mapping_inner_data = {
-                'game_id': mapping['esportsGameId'],
-                'platform_game_id': mapping['platformGameId'],
-                "blue_team_id": mapping['teamMapping'].get('100'),
-                "red_team_id": mapping['teamMapping'].get('200'),
-            }
-            for participant in mapping['participantMapping']:
-                mapping_inner_data['participant_id'] = participant
-                mapping_inner_data['participant_player_id'] = mapping['participantMapping'][participant]
-                write_mapping_data(conn, mapping_inner_data)
-        except Exception:
-            new_non_processed.append(mapping)
-            print(traceback.format_exc())
+    import concurrent.futures
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            futures = []
+            for i, mapping in enumerate(mapping_data):
+                # try:
+                mapping_inner_data = {
+                    'game_id': mapping['esportsGameId'],
+                    'platform_game_id': mapping['platformGameId'],
+                    "blue_team_id": mapping['teamMapping'].get('100'),
+                    "red_team_id": mapping['teamMapping'].get('200'),
+                }
+                for participant in mapping['participantMapping']:
+                    mapping_inner_data['participant_id'] = participant
+                    mapping_inner_data['participant_player_id'] = mapping['participantMapping'][participant]
+                    futures.append(executor.submit(_write_to_file, f'mapping_data_{i % 5}.json', mapping_inner_data))
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    future.result()
+                except Exception:
+                    print(traceback.format_exc())
+    except Exception:
+        print(traceback.format_exc())
     if f:
         f.close()
     print("Done populating mapping data, total mapping data: {}, non_processed: {}, time taken {} seconds".format(len(mapping_data), len(new_non_processed), time.time() - start))
     return 'mapping_data', new_non_processed
+
+
+def __populate_table_mapping_data(file_name, conn):
+    f = open(file_name, 'rb')
+    c = 0
+    for line in f:
+        write_mapping_data(conn, orjson.loads(line))
+        c += 1
+        if c % 1000 == 0:
+            print(f"Done {c} mapping data for file {file_name}")
+    f.close()
+
+
+def _populate_table_mapping_data():
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
+        db_conn_mapping = {
+            1: MySQLDatabase().get_connection(),
+            2: MySQLDatabase().get_connection(),
+            3: MySQLDatabase().get_connection(),
+            4: MySQLDatabase().get_connection(),
+            5: MySQLDatabase().get_connection(),
+        }
+        futures.append(executor.submit(__populate_table_mapping_data, 'mapping_data_0.json', db_conn_mapping[1]))
+        futures.append(executor.submit(__populate_table_mapping_data, 'mapping_data_1.json', db_conn_mapping[2]))
+        futures.append(executor.submit(__populate_table_mapping_data, 'mapping_data_2.json', db_conn_mapping[3]))
+        futures.append(executor.submit(__populate_table_mapping_data, 'mapping_data_3.json', db_conn_mapping[4]))
+        futures.append(executor.submit(__populate_table_mapping_data, 'mapping_data_4.json', db_conn_mapping[5]))
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                future.result()
+            except Exception:
+                print(traceback.format_exc())
+        for key in db_conn_mapping:
+            if db_conn_mapping[key]:
+                db_conn_mapping[key].commit()
+                db_conn_mapping[key].close()
 
 
 def populate_tables():
@@ -407,4 +460,5 @@ def populate_tables():
 
 
 if __name__ == '__main__':
-    populate_tables()
+    populate_table_mapping_data(MySQLDatabase().get_connection(), [])
+    _populate_table_mapping_data()
