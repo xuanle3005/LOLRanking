@@ -1,6 +1,7 @@
 import pymysql
 import os
 import traceback
+import pymysql.cursors
 
 ENDPOINT = "lolesport.cv2hmfnelsdh.us-east-2.rds.amazonaws.com"
 PORT = 3306
@@ -38,7 +39,7 @@ class MySQLDatabase(object):
     def __connect(self, **kwargs):
         conn = None
         try:
-            conn = pymysql.connect(host=ENDPOINT, user=USER, passwd='12345678', port=PORT, database=DBNAME, ssl_ca='us-east-2-bundle.pem')
+            conn = pymysql.connect(host=ENDPOINT, user=USER, passwd='12345678', port=PORT, database=DBNAME, ssl_ca='us-east-2-bundle.pem', cursorclass=pymysql.cursors.DictCursor)
         except Exception:
             print(traceback.format_exc())
         return conn
