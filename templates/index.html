@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<HTML lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>App</title>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
+            * {
+            margin: 0;
+            padding: 0;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                font: 100% / 1.5 Raleway, sans-serif;
+                color: hsl(230, 100%, 95%);
+                background: linear-gradient(135deg, hsl(230, 40%, 12%), hsl(230, 20%, 7%));
+                height: 100vh;
+                display: flex;
+            }
+
+            .navMenu {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            -webkit-transform: translate(-10%, -10%);
+            transform: translate(-50%, -50%);
+            justify-content:space-between;
+            width: 35rem;
+            word-spacing: 3rem;
+            }
+
+            .navMenu a {
+            color: #f6f4e6;
+            text-decoration: none;
+            font-size: 1.2em;
+            text-transform: uppercase;
+            font-weight: 500;
+            display: inline-block;
+            -webkit-transition: all 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out;
+            }
+
+            .navMenu a:hover {
+            color: #fddb3a;
+            }
+            
+            h2 {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);            
+            margin: auto;
+            font-size: 5rem;
+            font-weight: 300;
+            animation: lights 5s 750ms linear infinite;
+            }
+
+            @keyframes lights {
+            0% {
+                color: hsl(230, 40%, 80%);
+                text-shadow:
+                0 0 1em hsla(320, 100%, 50%, 0.2),
+                0 0 0.125em hsla(320, 100%, 60%, 0.3),
+                -1em -0.125em 0.5em hsla(40, 100%, 60%, 0),
+                1em 0.125em 0.5em hsla(200, 100%, 60%, 0);
+            }
+            
+            30% { 
+                color: hsl(230, 80%, 90%);
+                text-shadow:
+                0 0 1em hsla(320, 100%, 50%, 0.5),
+                0 0 0.125em hsla(320, 100%, 60%, 0.5),
+                -0.5em -0.125em 0.25em hsla(40, 100%, 60%, 0.2),
+                0.5em 0.125em 0.25em hsla(200, 100%, 60%, 0.4);
+            }
+            
+            40% { 
+                color: hsl(230, 100%, 95%);
+                text-shadow:
+                0 0 1em hsla(320, 100%, 50%, 0.5),
+                0 0 0.125em hsla(320, 100%, 90%, 0.5),
+                -0.25em -0.125em 0.125em hsla(40, 100%, 60%, 0.2),
+                0.25em 0.125em 0.125em hsla(200, 100%, 60%, 0.4);
+            }
+            
+            70% {
+                color: hsl(230, 80%, 90%);
+                text-shadow:
+                0 0 1em hsla(320, 100%, 50%, 0.5),
+                0 0 0.125em hsla(320, 100%, 60%, 0.5),
+                0.5em -0.125em 0.25em hsla(40, 100%, 60%, 0.2),
+                -0.5em 0.125em 0.25em hsla(200, 100%, 60%, 0.4);
+            }
+            
+            100% {
+                color: hsl(230, 40%, 80%);
+                text-shadow:
+                0 0 1em hsla(320, 100%, 50%, 0.2),
+                0 0 0.125em hsla(320, 100%, 60%, 0.3),
+                1em -0.125em 0.5em hsla(40, 100%, 60%, 0),
+                -1em 0.125em 0.5em hsla(200, 100%, 60%, 0);
+            }
+            
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navMenu">
+
+                <a href ="/">Home</a>
+                <a href= "/tournament">Tournament</a>
+                <a href ="/global">Global</a>
+                <a href= "/team">Team</a>
+                <div class="dot"></div>
+          
+        </nav>
+
+            <h2>Power Rankings</h2>
+
+    </body>
+   
+</HTML>

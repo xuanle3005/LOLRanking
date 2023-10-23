@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<HTML lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>App</title>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
+            * {
+            margin: 0;
+            padding: 0;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                font: 100% / 1.5 Raleway, sans-serif;
+                color: hsl(230, 100%, 95%);
+                background: linear-gradient(135deg, hsl(230, 40%, 12%), hsl(230, 20%, 7%));
+                height: 100vh;
+                display: flex;
+            }
+            .navMenu {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            -webkit-transform: translate(-10%, -10%);
+            transform: translate(-50%, -50%);
+            justify-content:space-between;
+            width: 35rem;
+            word-spacing: 3rem;
+            }
+
+            .navMenu a {
+            color: #f6f4e6;
+            text-decoration: none;
+            font-size: 1.2em;
+            text-transform: uppercase;
+            font-weight: 500;
+            display: inline-block;
+            -webkit-transition: all 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out;
+            }
+
+            .navMenu a:hover {
+            color: #fddb3a;
+            }
+
+
+            .container{
+                display: block;
+                top: 25%;
+                left: 30%;
+                position: absolute;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            table{
+                border: 1px solid;
+                background-color: transparent;
+            }
+            
+            th{
+                background-color: transparent;
+                color: white;
+                font-size: 1rem;
+            }
+            
+            form{
+                display: inline-block;
+                position: absolute;
+                top: 20%;
+                left: 30%;
+            }
+
+        </style>
+    </head>
+    <body>
+        <nav class="navMenu">
+            <a href ="/">Home</a>
+            <a href= "/tournament">Tournament</a>
+            <a href ="/global">Global</a>
+            <a href= "/team">Team</a>
+            <div class="dot"></div>
+        </nav>
+
+        <form action="" method="POST">
+           <label for="tournament_id">TournamentID:</label> <input type="text" id="tournament_id" name="tournament_id" value="103462439438682788">
+           <label for="stage">Stage:</label>
+           <select id="stage" name="stage_name">
+                <option value="Groups">Groups</option>
+                <option value="knockouts">knockouts</option>
+                <option value="Regular Season">Regular Season</option>
+                <option value="Playoffs">Playoffs</option>
+                <option value="Regional Finals">Regional Finals</option>
+                <option value="Round 1">Round 1</option>
+                <option value="Round 2">Round 2</option>
+                <option value="promotion">Promotion</option>
+                <option value="Regional Qualifier">Regional Qualifier</option>
+                <option value="Play In Groups">Play In Groups</option>
+                <option value="Play In Knockouts">Play In Knockouts</option>
+                <option value="Promotion Series">Promotion Series</option>
+                <option value="regional_qualifier">regional_qualifier</option>
+                <option value="Bracket Stage">Bracket Stage</option>
+                <option value="play_in_knockouts">play_in_knockouts</option>
+                <option value="east">east</option>
+                <option value="west">west</option>
+           </select>
+           <input type="submit" value="Find">
+        </form>
+
+        <div class="container">
+            {% for table in tables %}
+            {{titles[loop.index]}}
+            {{ table|safe }}
+            {% endfor %}
+        </div>
+    </body>
+</HTML>
